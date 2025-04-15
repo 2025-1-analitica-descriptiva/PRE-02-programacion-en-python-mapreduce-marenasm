@@ -6,6 +6,7 @@ import fileinput
 import glob
 import os.path
 import time
+import string
 from itertools import groupby
 
 
@@ -20,8 +21,24 @@ from itertools import groupby
 def copy_raw_files_to_input_folder(n):
     """Funcion copy_files"""
 
+    #verificar si la carpeta existe y si no existe crearla 
+    if not os.path.exists("files/input"):
+        os.makedirs("files/input")
+    #por cada archivo hago una tarea 
+    for file in glob.glob("files/raw/*.txt"):
+        #hace un conteo hasta n+1 con un paso de 1
+        for i in range(1, n + 1):
 
-#
+            with open(file, "r", encoding="utf-8") as f:
+                with open(
+                    f"files/input/{os.path.basename(file).split('.')[0]}_{i}.txt",
+                    "w",
+                    encoding="utf-8",
+                ) as f2:
+                    f2.write(f.read())
+
+
+
 # Escriba la función load_input que recive como parámetro un folder y retorna
 # una lista de tuplas donde el primer elemento de cada tupla es el nombre del
 # archivo y el segundo es una línea del archivo. La función convierte a tuplas
@@ -38,6 +55,16 @@ def copy_raw_files_to_input_folder(n):
 #
 def load_input(input_directory):
     """Funcion load_input"""
+    # lista vacia
+    #se una libreria la cual permite iterar sobre los archivos 
+    #f puntero actual
+    sequence = []
+    files = glob.glob(f"{input_directory}/*")
+    with fileinput.input(files=files) as f:
+        for line in f:
+            #nombre de latupla seguida de la linea
+            sequence.append((fileinput.filename(), line))
+    return sequence
 
 
 #
@@ -47,6 +74,15 @@ def load_input(input_directory):
 #
 def line_preprocessing(sequence):
     """Line Preprocessing"""
+    sequence = [
+        #trnasleta elimina todos los signos de puntuacion
+        #lo que queda me lo combierte en minusculas
+        #y devuelve la secuencia
+        (key, value.translate(str.maketrans("", "", string.punctuation)).lower())
+        for key, value in sequence
+    ]
+    return sequence
+  
 
 
 #
@@ -63,7 +99,7 @@ def line_preprocessing(sequence):
 #
 def mapper(sequence):
     """Mapper"""
-
+    return [(word, 1) for _, value in sequence for word in value.split()]
 
 #
 # Escriba la función shuffle_and_sort que recibe la lista de tuplas entregada
@@ -121,9 +157,15 @@ def create_marker(output_directory):
 #
 # Escriba la función job, la cual orquesta las funciones anteriores.
 #
+from pprint import pprint
 def run_job(input_directory, output_directory):
     """Job"""
 
+    sequence = load_input(input_directory)
+    sequence = line_preprocessing(sequence)
+    sequence = mapper(sequence)
+
+    pprint(sequence[:5])
 
 if __name__ == "__main__":
 
